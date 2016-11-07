@@ -66,13 +66,17 @@ def ZK(hosts, path):
 def upload(dir, path, hosts=DEFAULT_HOSTS):
     zk, path = ZK(hosts, path)
     for root, dirs, files in os.walk(dir):
+        outroot = root.replace(dir, "").strip("/")
+        outroot = join(path, outroot)
         for name in files:
             inpath = join(root, name)
-            outpath = join(path, root.replace(dir, ""), name)
-            zk.ensure_path(dirname(outpath))
+            outpath = join(outroot, name)
+            zk.ensure_path(outpath)
             with open(inpath) as f:
-                zk.set(path, f.read())
-            print("created", path)
+                data = f.read()
+                zk.set(outpath, data)
+            print("created", outpath, ":")
+            pretty_print(outpath, data)
 
 def ls(path, hosts=DEFAULT_HOSTS):
     zk, path = ZK(hosts, path)

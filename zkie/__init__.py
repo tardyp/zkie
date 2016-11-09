@@ -5,10 +5,10 @@ from __future__ import print_function
 import json
 import os
 import urlparse
-from os.path import dirname, getsize, join
 
 import argh
 from kazoo.client import KazooClient
+from kazoo.exceptions import NoNodeError
 
 try:
     from pygments.lexers import guess_lexer_for_filename, guess_lexer, JsonLexer, HexdumpLexer
@@ -20,6 +20,8 @@ except ImportError:
     hasPygments = False
 
 DEFAULT_HOSTS = os.environ.get("ZK_HOST", "localhost:2181")
+
+
 def pretty_print(fn, data):
     if not hasPygments:
         print(data)
@@ -63,14 +65,15 @@ def ZK(hosts, path):
     zk.start()
     return zk, path
 
+
 def upload(dir, path, hosts=DEFAULT_HOSTS):
     zk, path = ZK(hosts, path)
     for root, dirs, files in os.walk(dir):
         outroot = root.replace(dir, "").strip("/")
-        outroot = join(path, outroot)
+        outroot = os.path.join(path, outroot)
         for name in files:
-            inpath = join(root, name)
-            outpath = join(outroot, name)
+            inpath = os.path.join(root, name)
+            outpath = os.path.join(outroot, name)
             zk.ensure_path(outpath)
             with open(inpath) as f:
                 data = f.read()
@@ -78,18 +81,24 @@ def upload(dir, path, hosts=DEFAULT_HOSTS):
             print("created", outpath, ":")
             pretty_print(outpath, data)
 
+
 def ls(path, hosts=DEFAULT_HOSTS):
     zk, path = ZK(hosts, path)
     children = zk.get_children(path)
     print("\n".join(children))
 
+
 def find(path, hosts=DEFAULT_HOSTS):
-    zk, path = ZK(hosts, path)
-    children = zk.get_children(path)
+    zk, _path = ZK(hosts, path)
+    try:
+        children = zk.get_children(_path)
+    except NoNodeError:
+        return
     for child in children:
-        newpath = join(path, child)
+        newpath = os.path.join(path, child)
         print(newpath)
         find(newpath)
+
 
 @argh.arg('--out', '-O', help='output to the specicied file')
 def get(path, out=None, hosts=DEFAULT_HOSTS):
@@ -105,6 +114,7 @@ def get(path, out=None, hosts=DEFAULT_HOSTS):
 
 parser = argh.ArghParser()
 parser.add_commands([upload, ls, get, find])
+
 
 def cmd():
     parser.dispatch()

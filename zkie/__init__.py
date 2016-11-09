@@ -97,7 +97,7 @@ def find(path, hosts=DEFAULT_HOSTS):
     for child in children:
         newpath = os.path.join(path, child)
         print(newpath)
-        find(newpath)
+        find(newpath, hosts)
 
 
 @argh.arg('--out', '-O', help='output to the specicied file')

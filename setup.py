@@ -25,7 +25,8 @@ setup(
     },
     install_requires=[
         'argh',
-        'kazoo'
+        'kazoo',
+        'future'
     ],
     extras_require = {
        'ui': [

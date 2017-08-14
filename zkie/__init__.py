@@ -4,11 +4,16 @@ from __future__ import print_function
 
 import json
 import os
-import urlparse
 
 import argh
 from kazoo.client import KazooClient
 from kazoo.exceptions import NoNodeError
+from future.standard_library import install_aliases
+install_aliases()
+
+from urllib.parse import urlparse, urlencode
+from urllib.request import urlopen, Request
+from urllib.error import HTTPError
 
 try:
     from pygments.lexers import guess_lexer_for_filename, guess_lexer, JsonLexer, HexdumpLexer
